@@ -18,9 +18,7 @@ class HrAttendance(models.Model):
     employee_id = fields.Many2one('hr.employee', string="Employee", default=_default_employee, required=True, ondelete='cascade', index=True)
     department_id = fields.Many2one('hr.department', string="Department", related="employee_id.department_id")
     check_in = fields.Datetime(string="Check In", default=fields.Datetime.now, required=True)
-    # x_check_in_ip_address = fields.Char(string="Check in IP Address")
     check_out = fields.Datetime(string="Check Out")
-    # x_check_out_ip_address = fields.Char(string="Check out IP Address")
     worked_hours = fields.Float(string='Worked Hours', compute='_compute_worked_hours', store=True, readonly=True)
 
     @api.multi
@@ -76,6 +74,7 @@ class HrAttendance(models.Model):
                 ('check_in', '<=', attendance.check_in),
                 ('id', '!=', attendance.id),
             ], order='check_in desc', limit=1)
+
             if last_attendance_before_check_in and last_attendance_before_check_in.check_out and last_attendance_before_check_in.check_out >= attendance.check_in:
                 raise exceptions.ValidationError(_(
                     "Cannot create new attendance record for %(empl_name)s, the employee was already checked in on %(datetime)s") % {
@@ -85,6 +84,7 @@ class HrAttendance(models.Model):
                                                                                            fields.Datetime.from_string(
                                                                                                attendance.check_in))),
                                                  })
+
 
             if not attendance.check_out:
                 # if our attendance is "open" (no check_out), we verify there is no other "open" attendance

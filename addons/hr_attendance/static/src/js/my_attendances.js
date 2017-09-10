@@ -39,7 +39,7 @@ var MyAttendances = Widget.extend({
     update_attendance: function () {
         var self = this;
         var hr_employee = new Model('hr.employee');
-        hr_employee.call('attendance_manual', [[self.employee.id], 'hr_attendance.hr_attendance_action_my_attendances'])
+            hr_employee.call('attendance_manual', [[self.employee.id], 'hr_attendance.hr_attendance_action_my_attendances'])
             .then(function(result) {
                 if (result.action) {
                     self.do_action(result.action);
