@@ -3,6 +3,7 @@
 
 from random import choice
 from string import digits
+from odoo.http import request
 
 from odoo import models, fields, api, exceptions, _, SUPERUSER_ID
 
@@ -90,6 +91,7 @@ class HrEmployee(models.Model):
         action_message['previous_attendance_change_date'] = self.last_attendance_id and (self.last_attendance_id.check_out or self.last_attendance_id.check_in) or False
         action_message['employee_name'] = self.name
         action_message['next_action'] = next_action
+        action_message['IPAddress'] = request.httprequest.environ['REMOTE_ADDR']
 
         if self.user_id:
             modified_attendance = self.sudo(self.user_id.id).attendance_action_change()
@@ -112,12 +114,14 @@ class HrEmployee(models.Model):
             vals = {
                 'employee_id': self.id,
                 'check_in': action_date,
+                'x_check_in_ip_address': request.httprequest.environ['REMOTE_ADDR'],
             }
             return self.env['hr.attendance'].create(vals)
         else:
             attendance = self.env['hr.attendance'].search([('employee_id', '=', self.id), ('check_out', '=', False)], limit=1)
             if attendance:
                 attendance.check_out = action_date
+                attendance.x_check_out_ip_address = request.httprequest.environ['REMOTE_ADDR']
             else:
                 raise exceptions.UserError(_('Cannot perform check out on %(empl_name)s, could not find corresponding check in. '
                     'Your attendances have probably been modified manually by human resources.') % {'empl_name': self.name, })

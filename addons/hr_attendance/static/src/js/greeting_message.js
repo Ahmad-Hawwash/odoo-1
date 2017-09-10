@@ -47,6 +47,8 @@ var GreetingMessage = Widget.extend(BarcodeHandlerMixin, {
         this.attendance.check_out_time = this.attendance.check_out && (new Date((new Date(this.attendance.check_out)).valueOf() - (new Date()).getTimezoneOffset()*60*1000)).toTimeString().slice(0,8);
         this.previous_attendance_change_date = action.previous_attendance_change_date;
         this.employee_name = action.employee_name;
+        this.IPAddress = action.IPAddress;
+        alert(action.IPAddress);
     },
 
     start: function() {

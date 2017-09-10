@@ -18,7 +18,9 @@ class HrAttendance(models.Model):
     employee_id = fields.Many2one('hr.employee', string="Employee", default=_default_employee, required=True, ondelete='cascade', index=True)
     department_id = fields.Many2one('hr.department', string="Department", related="employee_id.department_id")
     check_in = fields.Datetime(string="Check In", default=fields.Datetime.now, required=True)
+    # x_check_in_ip_address = fields.Char(string="Check in IP Address")
     check_out = fields.Datetime(string="Check Out")
+    # x_check_out_ip_address = fields.Char(string="Check out IP Address")
     worked_hours = fields.Float(string='Worked Hours', compute='_compute_worked_hours', store=True, readonly=True)
 
     @api.multi
@@ -28,13 +30,19 @@ class HrAttendance(models.Model):
             if not attendance.check_out:
                 result.append((attendance.id, _("%(empl_name)s from %(check_in)s") % {
                     'empl_name': attendance.employee_id.name_related,
-                    'check_in': fields.Datetime.to_string(fields.Datetime.context_timestamp(attendance, fields.Datetime.from_string(attendance.check_in))),
+                    'check_in': fields.Datetime.to_string(fields.Datetime.context_timestamp(attendance,
+                                                                                            fields.Datetime.from_string(
+                                                                                                attendance.check_in))),
                 }))
             else:
                 result.append((attendance.id, _("%(empl_name)s from %(check_in)s to %(check_out)s") % {
                     'empl_name': attendance.employee_id.name_related,
-                    'check_in': fields.Datetime.to_string(fields.Datetime.context_timestamp(attendance, fields.Datetime.from_string(attendance.check_in))),
-                    'check_out': fields.Datetime.to_string(fields.Datetime.context_timestamp(attendance, fields.Datetime.from_string(attendance.check_out))),
+                    'check_in': fields.Datetime.to_string(fields.Datetime.context_timestamp(attendance,
+                                                                                            fields.Datetime.from_string(
+                                                                                                attendance.check_in))),
+                    'check_out': fields.Datetime.to_string(fields.Datetime.context_timestamp(attendance,
+                                                                                             fields.Datetime.from_string(
+                                                                                                 attendance.check_out))),
                 }))
         return result
 
@@ -69,10 +77,14 @@ class HrAttendance(models.Model):
                 ('id', '!=', attendance.id),
             ], order='check_in desc', limit=1)
             if last_attendance_before_check_in and last_attendance_before_check_in.check_out and last_attendance_before_check_in.check_out >= attendance.check_in:
-                raise exceptions.ValidationError(_("Cannot create new attendance record for %(empl_name)s, the employee was already checked in on %(datetime)s") % {
-                    'empl_name': attendance.employee_id.name_related,
-                    'datetime': fields.Datetime.to_string(fields.Datetime.context_timestamp(self, fields.Datetime.from_string(attendance.check_in))),
-                })
+                raise exceptions.ValidationError(_(
+                    "Cannot create new attendance record for %(empl_name)s, the employee was already checked in on %(datetime)s") % {
+                                                     'empl_name': attendance.employee_id.name_related,
+                                                     'datetime': fields.Datetime.to_string(
+                                                         fields.Datetime.context_timestamp(self,
+                                                                                           fields.Datetime.from_string(
+                                                                                               attendance.check_in))),
+                                                 })
 
             if not attendance.check_out:
                 # if our attendance is "open" (no check_out), we verify there is no other "open" attendance
@@ -82,10 +94,14 @@ class HrAttendance(models.Model):
                     ('id', '!=', attendance.id),
                 ])
                 if no_check_out_attendances:
-                    raise exceptions.ValidationError(_("Cannot create new attendance record for %(empl_name)s, the employee hasn't checked out since %(datetime)s") % {
-                        'empl_name': attendance.employee_id.name_related,
-                        'datetime': fields.Datetime.to_string(fields.Datetime.context_timestamp(self, fields.Datetime.from_string(no_check_out_attendances.check_in))),
-                    })
+                    raise exceptions.ValidationError(_(
+                        "Cannot create new attendance record for %(empl_name)s, the employee hasn't checked out since %(datetime)s") % {
+                                                         'empl_name': attendance.employee_id.name_related,
+                                                         'datetime': fields.Datetime.to_string(
+                                                             fields.Datetime.context_timestamp(self,
+                                                                                               fields.Datetime.from_string(
+                                                                                                   no_check_out_attendances.check_in))),
+                                                     })
             else:
                 # we verify that the latest attendance with check_in time before our check_out time
                 # is the same as the one before our check_in time computed before, otherwise it overlaps
@@ -95,10 +111,14 @@ class HrAttendance(models.Model):
                     ('id', '!=', attendance.id),
                 ], order='check_in desc', limit=1)
                 if last_attendance_before_check_out and last_attendance_before_check_in != last_attendance_before_check_out:
-                    raise exceptions.ValidationError(_("Cannot create new attendance record for %(empl_name)s, the employee was already checked in on %(datetime)s") % {
-                        'empl_name': attendance.employee_id.name_related,
-                        'datetime': fields.Datetime.to_string(fields.Datetime.context_timestamp(self, fields.Datetime.from_string(last_attendance_before_check_out.check_in))),
-                    })
+                    raise exceptions.ValidationError(_(
+                        "Cannot create new attendance record for %(empl_name)s, the employee was already checked in on %(datetime)s") % {
+                                                         'empl_name': attendance.employee_id.name_related,
+                                                         'datetime': fields.Datetime.to_string(
+                                                             fields.Datetime.context_timestamp(self,
+                                                                                               fields.Datetime.from_string(
+                                                                                                   last_attendance_before_check_out.check_in))),
+                                                     })
 
     @api.multi
     def copy(self):
